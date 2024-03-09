@@ -8,5 +8,18 @@ Affiliations:
 *Department of Computer Science, Brown University
 
 
+There are five parts in our Final Project:
+
+1. Introduction
+2. EDA
+3. Methods
+4. Results
+5. Reference
+6. Contribution of each member of the group
+
+
+
+
+
 
 
