@@ -1,9 +1,12 @@
 # Data2020-Final-Project
 This is the Final Project of Data 2020: Statistical Learning in Spring 2024. We study datasets including the Fragile Families and Child Wellbeing Study. 
 
-
 Final Project Group 5 Members: 
-Jinyu Wang^{*}, Letian Yu^{*}, Xiaoyan Liu, Yijia Xue, Ziao (Ollie) Zhang
+Jinyu Wang*, Letian Yu*, Xiaoyan Liu*, Yijia Xue*, Ziao (Ollie) Zhang*
 
 Affiliations: 
-*Department of Computer Science, Brown University, 02906 
+*Department of Computer Science, Brown University
+
+
+
+
