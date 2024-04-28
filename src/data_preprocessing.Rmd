@@ -1,0 +1,233 @@
+---
+title: "DATA2020 Final Project Data Preprocessing"
+output: pdf_document
+latex_engine: xelatex
+header-includes:
+- \usepackage{blkarray}
+- \usepackage{amsmath}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(knitr)
+library(tidyverse)
+library(rlang)
+library(scales)
+library(readstata13)
+library(haven)
+library(dplyr)
+library(purrr)
+```
+
+**Team: Final Project Group 5**\
+
+**Members: Jinyu Wang, Letian Yu, Xiaoyan Liu, Yijia Xue, Ziao Zhang**
+
+**Last Update Date: April 28 2024**
+
+# Introduction
+
+This document is a report on the data preprocessing for the DATA2020 final project.
+
+# Data Description
+
+The data used in this project is the Future of Families and Child Wellbeing Study Public Data. We aim to predict the child's overall success at year 15 using early year data. The dataset contains information on the child's family, health, and education from year 1 to year 6. The dataset is in Stata format and contains 6 waves of data.
+
+# Data Preprocessing
+```{r library, message=FALSE}
+library(haven)
+library(dplyr)
+library(purrr)
+```
+
+## Data Loading
+
+We selected interested columns in wave 1 to wave 6 from the original dataset. The selected columns are as follows:
+
+```{r load_data, tidy=TRUE, tidy.opts=list(width.cutoff=40), message=FALSE}
+
+# Define the columns and descriptions as named lists for each wave
+wave1_cols <- c(
+  cf1edu = "Father baseline education (father report, then mother report)",
+  cm1edu = "Mother baseline education (own report)",
+  cf1hhinc = "Household income (with imputed values)",
+  f1j8 = "About how much did you earn?",
+  m1i2b = "About how much did you earn?"
+)
+
+wave2_cols <- c(
+  f2b13 = "Does child walk or crawl yet?",
+  f2b32 = "In general, how is your child's health?",
+  f2d1a = "Does mother have any contact with child?",
+  m2d2 = "Does father have any contact with child?",
+  m2b43a = "On a scale of 1-(least like) to 5-(most like) - Child tends to be shy",
+  m2b10 = "Since child was born, how many times has he/she stayed overnight in hospital?"
+)
+
+wave3_cols <- c(
+  cf3marm = "Is father married to child's mother at year three?",
+  cf3kids = "Number of children under 18 in household",
+  cf3md_case_lib = "Father meets depression criteria (liberal) at three-year (CIDI)",
+  cf3hhinc = "Household income (with imputed values)",
+  f3c3c = "Days/week: father tell child she loves him/her?",
+  m3c3c = "Days/week: mother tell child she loves him/her?"
+)
+
+wave4_cols <- c(
+  cf4cohm = "Constructed - Father living with child's mother at five-year",
+  t4d7 = "number of kids present with child",
+  p4l63 = "Child is interested in many and different things",
+  p4l59 = "Child threatens people",
+  p4d1c = "Last 12M, couldn't afford to eat balanced meals",
+  m4d1b = "You can trust father to take good care of child",
+  f4b8d = "Does person/agency give money/voucher/scholarship to help pay for program?"
+)
+
+wave5_cols <- c(
+  k5d1f = "Amount of time on a weekday you play computer games on the computer or TV",
+  k5d1g = "Amount of time on a weekday you watch TV and movies",
+  k5h1 = "Condition of health in general",
+  k5d1e = "Amount of time on a weekday you chat with friends on the computer",
+  k5f1f = "Hurt an animal on purpose"
+)
+
+wave6_cols <- c(
+  p6b1 = "PCG's description of youth's health",
+  k6b5b = "Kids in this school work hard (?)",
+  k6b20a = "Grade in English or language arts",
+  k6b20b = "Grade in Math",
+  k6b20c = "Grade in History or social studies",
+  k6b20d = "Grade in Science",
+  k6b21d = "Trouble getting along with other students",
+  k6b22a = "Spend time on athletic or sports teams",
+  k6b22b = "Spend time on group performance activities"
+)
+
+# Function to load and select columns from dataset
+load_and_select_columns <- function(dataset_path, cols_dict) {
+  df <- read_dta(dataset_path)
+  df_selected <- select(df, idnum, one_of(names(cols_dict)))
+  return(df_selected)
+}
+
+# Read in the data for all waves
+df_wave1 <- load_and_select_columns('../data/FF_wave1_2020v2.dta', wave1_cols)
+df_wave2 <- load_and_select_columns('../data/FF_wave2_2020v2.dta', wave2_cols)
+df_wave3 <- load_and_select_columns('../data/FF_wave3_2020v2.dta', wave3_cols)
+df_wave4 <- load_and_select_columns('../data/FF_wave4_2020v2.dta', wave4_cols)
+df_wave5 <- load_and_select_columns('../data/FF_wave5_2020v2.dta', wave5_cols)
+df_wave6 <- load_and_select_columns('../data/FF_wave6_2020v2.dta', wave6_cols)
+
+# Merge the data frames by 'idnum'
+df_merged <- reduce(list(df_wave1, df_wave2, df_wave3, df_wave4, df_wave5, df_wave6), 
+                    ~inner_join(.x, .y, by = 'idnum'))
+
+# Convert all columns to character strings
+df_merged <- df_merged %>% mutate(across(everything(), as.character))
+
+# Write the merged data frame to a .dta file
+# write_dta(df_merged, '../data/ff_selected_cols.dta')
+df_merged
+```
+
+## Data Cleaning
+
+In this section, we will clean the data by replacing negative values with NA and calculating the missing rate of relevant wave 6 columns for each row. We will then filter out rows with target columns missing. Finally, we will construct the target Y variable (our self-defined measurement of teenager success) based on the selected columns.
+
+```{r construct_y, tidy=TRUE, tidy.opts=list(width.cutoff=40), message=FALSE}
+construct_y <- function(data) {
+  # Convert y candidate values
+  
+  # Health
+  data$y_good_health <- as.numeric(str_extract(data$p6b1, "^(-?\\d+)"))
+  data$y_good_health[data$y_good_health <= 2] <- 1
+  data$y_good_health[is.na(data$y_good_health) | data$y_good_health > 2] <- 0
+  
+  # Attitude
+  data$y_work_hard <- as.numeric(str_extract(data$k6b5b, "^(-?\\d+)"))
+  data$y_work_hard[data$y_work_hard <= 2] <- 1
+  data$y_work_hard[is.na(data$y_work_hard) | data$y_work_hard > 2] <- 0
+  
+  # Academic
+  academic_cols <- c('k6b20a', 'k6b20b', 'k6b20c', 'k6b20d')
+  for (col in academic_cols) {
+    data[[col]] <- as.numeric(str_extract(data[[col]], "^(-?\\d+)"))
+    data[[col]] <- ifelse(data[[col]] <= 1, 4,
+                          ifelse(data[[col]] <= 2, 3,
+                                 ifelse(data[[col]] <= 3, 2, 0)))
+  }
+  data$y_gpa_good <- rowMeans(data[,academic_cols], na.rm = TRUE)
+  data$y_gpa_good <- ifelse(data$y_gpa_good >= 3.6, 1, 0)
+  
+  # Social
+  data$y_social_good <- as.numeric(str_extract(data$k6b21d, "^(-?\\d+)"))
+  data$y_social_good[data$y_social_good <= 1] <- 1
+  data$y_social_good[is.na(data$y_social_good) | data$y_social_good > 1] <- 0
+  
+  # Group Performance
+  data$y_art <- as.numeric(str_extract(data$k6b22b, "^(-?\\d+)"))
+  data$y_art <- ifelse(data$y_art >= 3, 1, 0)
+  
+  # Athlete
+  data$y_sport <- as.numeric(str_extract(data$k6b22a, "^(-?\\d+)"))
+  data$y_sport <- ifelse(data$y_sport >= 3, 1, 0)
+  
+  # Composite score
+  data$y_score <- rowSums(data[,c('y_good_health', 'y_work_hard', 'y_gpa_good',
+                                  'y_social_good', 'y_art', 'y_sport')], na.rm = TRUE)
+  return(data)
+}
+```
+
+```{r data_cleaning, tidy=TRUE, tidy.opts=list(width.cutoff=40), message=FALSE}
+
+# Convert to R data frame
+df <- as_tibble(df_merged)
+df[, names(wave6_cols)] <- lapply(df[, names(wave6_cols)], as.character)
+
+# Replace values with negative signs at the beginning with NA
+negative_value_pattern <- "^-\\d+.*$"
+df[, names(wave6_cols)] <- lapply(df[, names(wave6_cols)], function(col) {
+  ifelse(grepl(negative_value_pattern, col), NA, col)
+})
+
+# Recalculate the number of missing values per row across the specific columns
+df$y_missing_rate <- rowSums(is.na(df[, names(wave6_cols)])) / length(wave6_cols)
+
+# Filter rows
+df_filtered <- df %>% filter(y_missing_rate <= 0.1)
+
+# Construct Y variables
+data_processed <- construct_y(df_filtered)
+
+# Select X and Y columns
+X_cols <- c(names(wave1_cols), names(wave2_cols), names(wave3_cols), 
+            names(wave4_cols), names(wave5_cols))
+Y_cols <- c('y_missing_rate', 'y_score')
+data_processed <- select(data_processed, one_of(c(X_cols, Y_cols)))
+
+# Write the processed data to a .dta file
+# write_dta(data_processed, '../data/ff_data_preprocessed.dta')
+data_processed
+```
+
+## Handle Missing X Values
+
+In this section, we will handle missing values in the X variables. 
+
+```{r handle_missing_x, tidy=TRUE, tidy.opts=list(width.cutoff=40), message=FALSE}
+x_processed <- data_processed
+
+# Using mutate across to apply the operations to all X_cols
+x_processed <- x_processed %>%
+  mutate(across(all_of(X_cols), ~ as.numeric(str_extract(., "^(-?\\d+)"))))
+
+# Write the processed X data to a .dta file
+# write_dta(x_processed, '../data/ff_data_x_preprocessed.dta')
+x_processed
+```
+
+
+## Summary
+
+In this report, we have preprocessed the Future of Families and Child Wellbeing Study Public Data. We have selected interested columns from wave 1 to wave 6, cleaned the data by replacing negative values with NA, calculated the missing rate of relevant wave 6 columns for each row, filtered out rows with target columns missing, and constructed the target Y variable based on the selected columns. We have also handled missing values in the X variables. The preprocessed data is ready for further analysis.
