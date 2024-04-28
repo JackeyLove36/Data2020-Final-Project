@@ -23,6 +23,8 @@ library(purrr)
 
 **Members: Jinyu Wang, Letian Yu, Xiaoyan Liu, Yijia Xue, Ziao Zhang**
 
+**Author: Letian**
+
 **Last Update Date: April 28 2024**
 
 # Introduction
