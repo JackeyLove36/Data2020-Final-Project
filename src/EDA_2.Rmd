@@ -7,23 +7,170 @@ date: "2024-04-28"
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+**Team: Final Project Group 5**\
 
-## R Markdown
+**Members: Jinyu Wang, Letian Yu, Xiaoyan Liu, Yijia Xue, Ziao Zhang**
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+**Author: Letian**
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+**Last Update Date: April 28 2024**
+
+# Introduction
+
+This document contains parts of the EDA code for the DATA2020 final project.
 
 ```{r cars}
-summary(cars)
+df <- read_dta('../data/ff_data_x_preprocessed.dta')
+df_explained <- read_dta('../data/ff_data_preprocessed.dta')
 ```
 
-## Including Plots
-
-You can also embed plots, for example:
+## Continous Variable
+['cf1hhinc', 'f1j8', 'm1i2b', 'cf3hhinc']
+cf1hhinc: Household income(wave1) 
+f1j8: How much did you earn(father) in wave1?
+m1i2b: How much did you earn(mother) in wave1?
+cf3hhinc: Household income(wave3)
+Boxplot for continous variable
 
 ```{r pressure, echo=FALSE}
-plot(pressure)
+#Wave 1 Household Income
+positive_data <- df %>%
+  filter(cf1hhinc > 0, cf3hhinc >0,f1j8>0,m1i2b>0)
+ggplot(positive_data, aes(x = "",y = cf1hhinc)) +
+  geom_boxplot(fill = "tomato", color = "black", outlier.colour = "red", outlier.shape = 16) +
+  ggtitle("Distribution of Household Income in Wave1") +
+  theme_minimal() + 
+  ylab("Values") +
+  xlab("")
+
+ggplot(positive_data, aes(x = as.factor(y_score),y = cf1hhinc)) +
+  geom_boxplot(fill = "tomato", color = "black", outlier.colour = "red", outlier.shape = 16) +
+  ggtitle("Relationship between Household Income in Wave1 and Success Score") +
+  theme_minimal() +  
+  ylab("Values") +
+  xlab("Success Score")
+
+#Wave 3 Household Income
+ggplot(positive_data, aes(x = "",y = cf3hhinc)) +
+  geom_boxplot(fill = "tomato", color = "black", outlier.colour = "red", outlier.shape = 16) +
+  ggtitle("Distribution of Household Income in Wave3") +
+  theme_minimal() + 
+  ylab("Values") +
+  xlab("")
+
+ggplot(positive_data, aes(x = as.factor(y_score),y = cf3hhinc)) +
+  geom_boxplot(fill = "tomato", color = "black", outlier.colour = "red", outlier.shape = 16) +
+  ggtitle("Relationship between Household Income in Wave3 and Success Score") +
+  theme_minimal() +  
+  ylab("Values") +
+  xlab("Success Score")
+```
+```{r}
+#Wave 1 Father Income
+ggplot(positive_data, aes(x = "",y = f1j8)) +
+  geom_boxplot(fill = '#0077b6', color = "black", outlier.colour = "#03045e", outlier.shape = 16) +
+  ggtitle("Distribution of Father Income in Wave1") +
+  theme_minimal() + 
+  ylab("Values") +
+  xlab("")
+
+ggplot(positive_data, aes(x = as.factor(y_score),y = f1j8)) +
+  geom_boxplot(fill = "#0077b6", color = "black", outlier.colour = "#03045e", outlier.shape = 16) +
+  ggtitle("Relationship between Father Income in Wave1 and Success Score") +
+  theme_minimal() +  
+  ylab("Values") +
+  xlab("Success Score")
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r}
+#Wave 1 Mother Income
+ggplot(positive_data, aes(x = "",y = m1i2b)) +
+  geom_boxplot(fill = '#f8ad9d', color = "black", outlier.colour = "#f08080", outlier.shape = 16) +
+  ggtitle("Distribution of Mothwe Income in Wave1") +
+  theme_minimal() + 
+  ylab("Values") +
+  xlab("")
+
+ggplot(positive_data, aes(x = as.factor(y_score),y = m1i2b)) +
+  geom_boxplot(fill = "#f8ad9d", color = "black", outlier.colour = "#f08080", outlier.shape = 16) +
+  ggtitle("Relationship between Mother Income in Wave1 and Success Score") +
+  theme_minimal() +  
+  ylab("Values") +
+  xlab("Success Score")
+```
+Categorical Variable:
+'k5d1f', 'k5d1g', 'k5h1', 'k5d1e', 'k5f1f'
+k5d1f:Amount of time on a weekday you play computer games on the computer or TV
+k5d1g: Amount of time on a weekday you watch TV and movies
+k5h1: Condition of health in general
+k5d1e: Amount of time on a weekday you chat with friends on the computer
+k5f1f: Hurt an animal on purpose
+
+```{r}
+positive_data <- positive_data %>%
+  filter(k5d1f >= 0, k5d1g >= 0,k5h1>=0,k5d1e>=0,k5f1f>=0)
+
+ggplot(positive_data, aes(x = k5d1f)) +
+  geom_bar(fill = "#b8c0ff") +
+  ggtitle("Bar Plot of Time on Computer or TV on a Weekday") +
+  xlab("Condition of Time on Computer or TV on a Weekday") +
+  ylab("Frequency")
+
+description_k5d1f <- c("0-none","1-half an hour or less","2-more than half an hour but less than an hour","3-one to two hour","4 more than 2 hours")
+colors <- c("#ff595e", "#ffca3a", "#8ac926","#1982c4","#6a4c93")
+mosaicplot(table( positive_data$y_score,positive_data$k5d1f), main = "Mosaic Plot of Success Score vs. Time on Computer or TV on a Weekday",  xlab = "Success Score", ylab = "Time Level on Computer or TV",col = colors)
+#par(xpd = TRUE, mar = par()$mar + c(0, 0, 0, 50))
+#legend("topright", inset = c(-0.5, 0),legend = description_k5d1f, fill = colors, title = "Numbers", cex = 0.5)
+
+```
+```{r}
+ggplot(positive_data, aes(x = k5d1g)) +
+  geom_bar(fill = "#b8c0ff") +
+  ggtitle("Bar Plot of Time on watching TV and Movies on a Weekday") +
+  xlab("Condition of Time on watching TV and Movies on a Weekday") +
+  ylab("Frequency")
+
+colors <- c("#ff595e", "#ffca3a", "#8ac926","#1982c4","#6a4c93")
+mosaicplot(table( positive_data$y_score,positive_data$k5d1g), main = "Mosaic Plot of Success Score vs. Time on watching TV and Movies on a Weekday",  xlab = "Success Score", ylab = "Time Level on TV and Movies",col = colors)
+```
+
+```{r}
+library(ggplot2)
+#1 Yes - 2 No
+ggplot(positive_data, aes(x = k5f1f)) +
+  geom_bar(fill = "#a4133c") +
+  ggtitle("Bar Plot of Hurt an Animal on Purpose") +
+  xlab("Hurt an Animal on Purpose") +
+  ylab("Frequency")
+
+mosaicplot(table( positive_data$y_score,positive_data$k5f1f), main = "Mosaic Plot of Success Score vs. Condition of Hurt an Animal on Purpose",  xlab = "Success Score", ylab = "Condition of Hurt an Animal on Purpose",col = colors)
+ggplot(positive_data, aes(x = y_score, fill = as.factor(k5f1f))) +
+  geom_bar(position = "stack") +
+  ggtitle("Stacked Bar Plot of Two Categorical Variables")+
+  labs(fill = "Hurt an Animal on Purpose") 
+```
+
+```{r}
+#k5h1:Condition of health in general
+ggplot(positive_data, aes(x = k5h1)) +
+  geom_bar(fill = "#99d98c") +
+  ggtitle("Bar Plot of Condition of health") +
+  xlab("Condition of health") +
+  ylab("Frequency")
+
+mosaicplot(table( positive_data$y_score,positive_data$k5h1), main = "Mosaic Plot of Success Score vs. Condition of health",  xlab = "Success Score", ylab = "Condition of health",col = colors)
+```
+```{r}
+#k5d1e:Time on chat with friends on the computer(weekday)
+#0  0 none; 1 half an hour or less;2 0.5 hour-1hour; 3 1-2 hours;4 more than 2 hours
+
+ggplot(positive_data, aes(x = k5d1e)) +
+  geom_bar(fill = "#b8c0ff") +
+  ggtitle("Bar Plot of Time on watching TV and Movies on a Weekday") +
+  xlab("Condition of Time on watching TV and Movies on a Weekday") +
+  ylab("Frequency")
+
+colors <- c("#ff595e", "#ffca3a", "#8ac926","#1982c4","#6a4c93")
+mosaicplot(table( positive_data$y_score,positive_data$k5d1e), main = "Mosaic Plot of Success Score vs. Time on chat with friends on the computer(weekday)",  xlab = "Success Score", ylab = "Time Level on chat",col = colors)
+```
+
