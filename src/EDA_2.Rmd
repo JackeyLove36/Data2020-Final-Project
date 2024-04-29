@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 **Members: Jinyu Wang, Letian Yu, Xiaoyan Liu, Yijia Xue, Ziao Zhang**
 
-**Author: Letian**
+**Author: Yijia**
 
 **Last Update Date: April 28 2024**
 
