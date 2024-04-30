@@ -1,0 +1,105 @@
+---
+title: "DATA2020 Final Project Modelling: GLM"
+output: pdf_document
+latex_engine: xelatex
+header-includes:
+- \usepackage{blkarray}
+- \usepackage{amsmath}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(knitr)
+library(tidyverse)
+library(rlang)
+library(scales)
+library(readstata13)
+```
+
+**Team: Final Project Group 5**\
+
+**Members: Jinyu Wang, Letian Yu, Xiaoyan Liu, Yijia Xue, Ziao Zhang**
+
+**Author: Letian**
+
+**Last Update Date: April 29 2024**
+
+
+# Introduction
+
+```{r library, message=FALSE}
+library(haven)
+library(dplyr)
+library(purrr)
+library(mice)
+library(pROC)
+library(caret)
+```
+
+In this report, we will use the Generalized Linear Model (GLM) to predict children overall success at the age of 15 for the fragile family data. The data set contains 3113 observations and 13 variables. The dependent variable is the overall success of children at the age of 15, which is a categorical variable. The independent variables include `cm1edu` the mother's education level, `cf1edu` the father's education level, `f2b32` children health level, `m2d2` whether father has conflict with child, `cf3marm` the marital status of the father with mother, `cf3kids` the number of children under 18 in the household, `cf3md_case_lib` whether father meets depression criteria at children 3rd year, `cf4cohm` whether father is living with mother at children 5th year, `t4d7` number of kids present with child, `cf1hhinc` the household income, `k5d1f` the amount of time on a weekday children play computer games on the computer or TV, and `k5f1f` whether children hurt an animal on purpose.
+
+
+# Data Preparation
+
+```{r load_data, tidy=TRUE, tidy.opts=list(width.cutoff=40), message=FALSE}
+data <- read_dta('../data/ff_data_x_preprocessed_v2.dta')
+data <- data %>% select(c(cf1edu, cm1edu, f2b32, m2d2, cf3marm, cf3kids, cf3md_case_lib,
+                          cf4cohm, t4d7, cf1hhinc, k5d1f, k5f1f, y_binary))
+data <- data %>%
+  mutate(across(c(cf3kids, t4d7, cf1hhinc), as.numeric),
+         across(c(cf1edu, cm1edu, f2b32, m2d2, cf3marm, cf3md_case_lib,
+                  cf4cohm, k5d1f, k5f1f, y_binary), as.factor))
+data
+```
+
+
+```{r imputation}
+data_imputed <- mice(data, m = 5, method = 'pmm', seed = 123)
+data_imputed <- complete(data_imputed, 5)
+data_imputed
+```
+
+```{r split-train-test, tidy=TRUE, tidy.opts=list(width.cutoff=40), message=FALSE}
+set.seed(283)
+  
+data_y1 <- data_imputed[data_imputed$y_binary == 1, ]
+data_y0 <- data_imputed[data_imputed$y_binary == 0, ]
+
+
+test_indices_y1 <- sample(nrow(data_y1), 150)
+test_indices_y0 <- sample(nrow(data_y0), 150)
+
+test <- rbind(data_y1[test_indices_y1, ], data_y0[test_indices_y0, ])
+train <- data_imputed[!rownames(data_imputed) %in% rownames(test), ]
+```
+
+
+# Model Fitting
+
+```{r model_fitting}
+logistic_model <- glm(y_binary ~ ., data = train, family = binomial)
+
+summary(logistic_model)
+anova(logistic_model, test = "Chisq")
+
+```
+
+```{r test, tidy=TRUE, tidy.opts=list(width.cutoff=20)}
+test_predict <- predict(logistic_model, newdata = test, type = "response")
+test_predict <- ifelse(test_predict > 0.5, 1, 0)
+
+compare_test <- table(test$y_binary, test_predict, dnn = c('Actual', 'Predicted'))
+accuracy <- sum(diag(compare_test)) / sum(compare_test)
+print(accuracy)
+```
+```{r ROC, tidy=TRUE, tidy.opts=list(width.cutoff=20)}
+predictions <- predict(logistic_model, newdata = test, type = "response")
+roc_curve <- roc(test$y_binary, predictions)
+plot(roc_curve, main="ROC Curve", col="#1c61b6")
+print(auc(roc_curve))
+```
+```{r confusion_matrix, tidy=TRUE, tidy.opts=list(width.cutoff=20)}
+conf_matrix <- confusionMatrix(as.factor(test_predict), as.factor(test$y_binary))
+print(conf_matrix$table)
+plot(conf_matrix$table, main = "Confusion Matrix")
+```
