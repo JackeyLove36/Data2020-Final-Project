@@ -34,6 +34,7 @@ library(purrr)
 library(mice)
 library(pROC)
 library(caret)
+library(xtable)
 ```
 
 In this report, we will use the Generalized Linear Model (GLM) to predict children overall success at the age of 15 for the fragile family data. The data set contains 3113 observations and 13 variables. The dependent variable is the overall success of children at the age of 15, which is a categorical variable. The independent variables include `cm1edu` the mother's education level, `cf1edu` the father's education level, `f2b32` children health level, `m2d2` whether father has conflict with child, `cf3marm` the marital status of the father with mother, `cf3kids` the number of children under 18 in the household, `cf3md_case_lib` whether father meets depression criteria at children 3rd year, `cf4cohm` whether father is living with mother at children 5th year, `t4d7` number of kids present with child, `cf1hhinc` the household income, `k5d1f` the amount of time on a weekday children play computer games on the computer or TV, and `k5f1f` whether children hurt an animal on purpose.
@@ -77,11 +78,64 @@ train <- data_imputed[!rownames(data_imputed) %in% rownames(test), ]
 # Model Fitting
 
 ```{r model_fitting}
+options(scipen = 999, digits=3)
 logistic_model <- glm(y_binary ~ ., data = train, family = binomial)
 
 summary(logistic_model)
 anova(logistic_model, test = "Chisq")
 
+```
+```{r result}
+coef_summary <- summary(logistic_model)$coefficients
+coef_summary <- as.data.frame(coef_summary)
+names(coef_summary) <- c("Estimate", "Std. Error", "z value", "Pr(>|z|)")
+
+z_score <- qnorm(0.975)
+coef_summary$`CI Lower` <- round(coef_summary$Estimate - z_score * coef_summary$`Std. Error`, 4)
+coef_summary$`CI Upper` <- round(coef_summary$Estimate + z_score * coef_summary$`Std. Error`, 4)
+coef_summary$Estimate <- round(coef_summary$Estimate, 4)
+coef_summary$`Std. Error` <- round(coef_summary$`Std. Error`, 4)
+coef_summary$`Pr(>|z|)` <- round(coef_summary$`Pr(>|z|)`, 4)
+
+coef_summary$`Confidence Interval` <- paste("[", coef_summary$`CI Lower`, ", ", coef_summary$`CI Upper`, "]", sep = "")
+final_summary <- coef_summary[, c("Estimate", "Std. Error", "Confidence Interval", "Pr(>|z|)")]
+print(final_summary)
+latex_table <- xtable(final_summary, caption = "Logistic Regression Coefficients", label = "table:coefficients",
+                      digits= c(0, 4, 4, 4, 4))
+
+
+# Printing the xtable with four digits for all numeric columns
+print(latex_table, include.rownames = TRUE, floating = FALSE, 
+      hline.after = c(-1, 0, nrow(final_summary)), digits = c(0, 4, 4, 4))
+```
+```{r q3-mse, tidy=TRUE, tidy.opts=list(width.cutoff=20)}
+set.seed(42)
+
+# initialization for K-fold CV
+K <- 5
+ctrl <- trainControl(method = "cv",
+                     number = K,
+                     verboseIter = FALSE)
+
+model1_formula <- SBP ~ LEAD + AGE + SEX
+model2_formula <- log(SBP) ~ LEAD + AGE + SEX
+
+# perform K-fold cross-validation
+model1 <- train(model1_formula, data=data, method = "lm", trControl=ctrl)
+model2 <- train(model2_formula, data=data, method = "lm", trControl=ctrl)
+
+# Calculate average MSE for each model
+rmse_model1 <- model1$results$RMSE
+rmse_model2 <- model2$results$RMSE
+mse_model1 <- rmse_model1^2
+mse_model2 <- rmse_model2^2
+
+
+cat("RMSE for Model 1:", rmse_model1, "\n")
+cat("RMSE for Model 2:", rmse_model2, "\n")
+
+cat("MSE for Model 1:", mse_model1, "\n")
+cat("MSE for Model 2:", mse_model2, "\n")
 ```
 
 ```{r test, tidy=TRUE, tidy.opts=list(width.cutoff=20)}
