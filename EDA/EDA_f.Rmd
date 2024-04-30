@@ -17,22 +17,26 @@ print(data)
 ```{r}
 # Filter the data to exclude rows where cf1edu equals -3
 filtered_data <- data[data$cf1edu != -3, ]
-# Create a bar plot
-ggplot(filtered_data, aes(x = cf1edu, fill = ..x..)) +
+
+# Create a bar plot for Father's education
+father_plot <- ggplot(filtered_data, aes(x = cf1edu, fill = ..x..)) +
   geom_histogram(bins = 10, alpha=0.9)  +
   scale_fill_gradient(low='#808000', high='#FF7F50') + 
-  labs(title = "Distribution of Father education")
-ggsave(filename = "father.png")
+  labs(x="father education")
 
-# Mother
-# Filter the data to exclude rows where cf1edu equals -3
+ggsave(filename = "father.png", plot = father_plot)
+
+# Filter the data to exclude rows where cm1edu equals -3
 filtered_data_m <- data[data$cm1edu != -3, ]
-# Create a bar plot
-ggplot(filtered_data_m, aes(x = cm1edu, fill = ..x..)) +
+
+# Create a bar plot for Mother's education
+mother_plot <- ggplot(filtered_data_m, aes(x = cm1edu, fill = ..x..)) +
   geom_histogram(bins = 10, alpha=0.9)  +
   scale_fill_gradient(low='#483D8B', high='#DB7093') + 
-  labs(title = "Distribution of Mother education")
-ggsave(filename = "mother.png")
+  labs( x="mother education")
+
+ggsave(filename = "mother.png", plot = mother_plot)
+
 ```
 
 3.f2b32: In general, how is your child's health?
@@ -42,57 +46,60 @@ library(viridis)
 # Filter the data without negative
 filtered_data_h <- data[data$f2b32 > 0, ]
 # boxplot
-ggplot(filtered_data_h, aes(x = y_binary, y = f2b32, fill = as.factor(y_binary))) +
+box_c <- ggplot(filtered_data_h, aes(x = y_binary, y = f2b32, fill = as.factor(y_binary))) +
   geom_boxplot(alpha = 0.3)  +
-  scale_fill_viridis_d() +
-  labs(title = "Distribution of success by child's health")
-ggsave(filename = "success by child's health1.png")
+  scale_fill_viridis_d()
+ggsave(filename = "success by child's health1.png",plot = box_c)
 # Violin Plot
 filtered_data <- data[data$f2b32 > 0, ]
 # violin plot
-ggplot(filtered_data, aes(y = f2b32, x = y_binary, fill = as.factor(y_binary))) +
+violin_c <- ggplot(filtered_data, aes(y = f2b32, x = y_binary, fill = as.factor(y_binary))) +
   geom_violin() +
   scale_fill_viridis_d() +
-  labs(title = "Violin Plot of success by child's health", y = "f2b32", x = "y_binary", fill = "y_binary") +
+  labs( y = "child's healthe", x = "success", fill = "success") +
   theme_minimal()
-ggsave(filename = "success by child's health2.png")
+ggsave(filename = "success by child's health2.png",plot=violin_c)
 # histogram
 filtered_data_m <- data[data$f2b32 > 0, ]
 # Create a bar plot
-ggplot(filtered_data_m, aes(x = f2b32, fill = ..x..)) +
+bar_c <- ggplot(filtered_data_m, aes(x = f2b32, fill = ..x..)) +
   geom_histogram(bins = 10, alpha=0.9)  +
-  scale_fill_gradient(low='#483D8B', high='#DB7093') + 
-  labs(title = "Distribution of success by child's health")
-ggsave(filename = "success by child's health3.png")
+  scale_fill_gradient(low='#483D8B', high='#DB7093') 
+ggsave(filename = "success by child's health3.png",plot = bar_c)
 ```
 4. m2d2:  Int Chk: Does father have any contact with child ?
 
 ```{r}
 # Filter the data without negative
 filtered_data_h <- data[data$m2d2 > 0, ]
-# boxplot
-ggplot(filtered_data_h, aes(x = y_binary, y = m2d2, fill = as.factor(y_binary))) +
+
+# Boxplot
+boxplot_plot <- ggplot(filtered_data_h, aes(x = y_binary, y = m2d2, fill = as.factor(y_binary))) +
   geom_boxplot(alpha = 0.3)  +
-  scale_fill_viridis_d() +
-  labs(title = "Distribution of success by father contacts with child")
-ggsave(filename = "father contacts with child.png")
+  scale_fill_viridis_d() 
+
+ggsave(filename = "father_contacts_with_child_boxplot.png", plot = boxplot_plot)
+
 # Violin Plot
 filtered_data <- data[data$f2b32 > 0, ]
-# violin plot
-ggplot(filtered_data, aes(y = m2d2, x = y_binary, fill = as.factor(y_binary))) +
+
+violin_plot <- ggplot(filtered_data, aes(y = m2d2, x = y_binary, fill = as.factor(y_binary))) +
   geom_violin() +
   scale_fill_viridis_d() +
-  labs(title = "Violin Plot of Distribution of success by father contacts with child", y = "m2d2", x = "y_binary", fill = "y_binary") +
+  labs(y = "contact", x = "success", fill = "success") +
   theme_minimal()
-ggsave(filename = "father contacts with child2.png")
-# histogram
+
+ggsave(filename = "father_contacts_with_child_violin.png", plot = violin_plot)
+
+# Histogram
 filtered_data_m <- data[data$f2b32 > 0, ]
-# Create a bar plot
-ggplot(filtered_data_m, aes(x = m2d2, fill = ..x..)) +
+
+histogram_plot <- ggplot(filtered_data_m, aes(x = m2d2, fill = ..x..)) +
   geom_histogram(bins = 10, alpha=0.9)  +
-  scale_fill_gradient(low='#483D8B', high='#DB7093') + 
-  labs(title = "Distribution of success by father contacts with child")
-ggsave(filename = "father contacts with child3.png")
+  scale_fill_gradient(low='#483D8B', high='#DB7093') 
+
+ggsave(filename = "father_contacts_with_child_histogram.png", plot = histogram_plot)
+
 ```
 5.m2b43a: On a scale of 1-(least like) to 5-(most like) - Child tends to be shy
 
@@ -107,44 +114,43 @@ category_counts <- table(filtered_data$cf3marm)
 # Convert the frequency table to a data frame
 category_df <- as.data.frame(category_counts)
 # Create a pie chart
-ggplot(category_df, aes(x = "", y = Freq, fill = factor(Var1))) +
+mm <- ggplot(category_df, aes(x = "", y = Freq, fill = factor(Var1))) +
   geom_bar(stat = "identity", width = 1) +
-  coord_polar("y", start = 0) +
-  labs(title = "Distribution of father married to child's mother at year three") +
+  coord_polar("y", start = 0)+
   theme_void() +
   theme(legend.position = "right")
-ggsave(filename = "father married to child's mother.png")
+ggsave(filename = "father married to child's mother.png",plot=mm)
 ```
 
 7.cf3kids: Constructed - Number of children under 18 in household
 ```{r}
 # Filter the data without negative
 filtered_data_h <- data[data$cf3kids > 0, ]
-# boxplot
-ggplot(filtered_data_h, aes(x = y_binary, y = cf3kids, fill = as.factor(y_binary))) +
+
+# Boxplot
+boxplot_plot <- ggplot(filtered_data_h, aes(x = y_binary, y = cf3kids, fill = as.factor(y_binary))) +
   geom_boxplot(alpha = 0.3)  +
   scale_fill_viridis_d() +
-  labs(title = "Distribution of success by children under 18 in household")
-ggsave(filename = "children under 18 in household.png")
+  labs(x="success",y="children under 18 in household")
+
+ggsave(filename = "children_under_18_in_household_boxplot.png", plot = boxplot_plot)
 
 # Violin Plot
-filtered_data <- data[data$cf3kids > 0, ]
-# violin plot
-ggplot(filtered_data, aes(y = cf3kids, x = y_binary, fill = as.factor(y_binary))) +
+violin_plot <- ggplot(filtered_data, aes(y = cf3kids, x = y_binary, fill = as.factor(y_binary))) +
   geom_violin() +
   scale_fill_viridis_d() +
-  labs(title = "Violin Plot of Distribution of success by children under 18 in household", y = "cf3kids", x = "y_binary", fill = "y_binary") +
+  labs(y = "cf3kids", x = "y_binary", fill = "y_binary") +
   theme_minimal()
-ggsave(filename = "children under 18 in household2.png")
 
-# histogram
-filtered_data_m <- data[data$cf3kids > 0, ]
-# Create a bar plot
-ggplot(filtered_data_m, aes(x = cf3kids, fill = ..x..)) +
+ggsave(filename = "children_under_18_in_household_violin.png", plot = violin_plot)
+
+# Histogram
+histogram_plot <- ggplot(filtered_data_m, aes(x = cf3kids, fill = ..x..)) +
   geom_histogram(bins = 10, alpha=0.9)  +
-  scale_fill_gradient(low='#483D8B', high='#DB7093') + 
-  labs(title = "Distribution of success by children under 18 in household")
-ggsave(filename = "children under 18 in household3.png")
+  scale_fill_gradient(low='#483D8B', high='#DB7093') 
+
+ggsave(filename = "children_under_18_in_household_histogram.png", plot = histogram_plot)
+
 ```
 
 8. cm3md_case_lib: Constructed - Father meets depression criteria (liberal) at three-year (CIDI)
@@ -156,13 +162,12 @@ category_counts <- table(filtered_data$cf3md_case_lib)
 # Convert the frequency table to a data frame
 category_df <- as.data.frame(category_counts)
 # Create a pie chart
-ggplot(category_df, aes(x = "", y = Freq, fill = factor(Var1))) +
+nn <- ggplot(category_df, aes(x = "", y = Freq, fill = factor(Var1))) +
   geom_bar(stat = "identity", width = 1) +
-  coord_polar("y", start = 0) +
-  labs(title = "Distribution of Father meets depression criteria") +
+  coord_polar("y", start = 0)  +
   theme_void() +
   theme(legend.position = "right")
-ggsave(filename = "Father meets depression criteria.png")
+ggsave(filename = "Father meets depression criteria.png",plot=nn)
 ```
 9.cf4cohm:  Constructed - Father living with child's mother at five-year
 
@@ -176,8 +181,7 @@ category_df <- as.data.frame(category_counts)
 # Create a pie chart
 ggplot(category_df, aes(x = "", y = Freq, fill = factor(Var1))) +
   geom_bar(stat = "identity", width = 1) +
-  coord_polar("y", start = 0) +
-  labs(title = "Father living with child's mother at five-year") +
+  coord_polar("y", start = 0)  +
   theme_void() +
   theme(legend.position = "right")
 ggsave(filename = "Father living with child's mother at five-year.png")
@@ -189,8 +193,7 @@ filtered_data_m <- data[data$t4d7 >= 0, ]
 # Create a bar plot
 ggplot(filtered_data_m, aes(x = t4d7, fill = ..x..)) +
   geom_histogram(bins = 10, alpha=0.9)  +
-  scale_fill_gradient(low='#483D8B', high='#DB7093') + 
-  labs(title = "Distribution of kids present with child")  
+  scale_fill_gradient(low='#483D8B', high='#DB7093')  
 ggsave(filename = "kids present with child.png")
 # scatter plot
 # ggplot(filtered_data_m, aes(x = t4d7, y = y_binary)) +
@@ -201,26 +204,31 @@ ggsave(filename = "kids present with child.png")
 ```{r}
 # Filter the data without negative
 filtered_data <- data[data$cf1hhinc > 0, ]
-# boxplot
-ggplot(filtered_data, aes(x = y_binary, y = cf1hhinc, fill = as.factor(y_binary))) +
+
+# Boxplot
+boxplot_plot <- ggplot(filtered_data, aes(x = y_binary, y = cf1hhinc, fill = as.factor(y_binary))) +
   geom_boxplot(alpha = 0.3)  +
   scale_fill_viridis_d() +
-  labs(title = "Distribution of success by Household income")
-ggsave(filename = "Household income.png")
-# violin plot
-ggplot(filtered_data, aes(y = cf1hhinc, x = y_binary, fill = as.factor(y_binary))) +
+  labs(x="success",y="Household income")
+
+ggsave(filename = "Household_income_boxplot.png", plot = boxplot_plot)
+
+# Violin plot
+violin_plot <- ggplot(filtered_data, aes(y = cf1hhinc, x = y_binary, fill = as.factor(y_binary))) +
   geom_violin() +
   scale_fill_viridis_d() +
-  labs(title = "Distribution of success by Household income", y = "m2d2", x = "y_binary", fill = "y_binary") +
+  labs( y = "m2d2", x = "y_binary", fill = "y_binary") +
   theme_minimal()
-ggsave(filename = "Household income2.png")
 
-# histogram
-ggplot(filtered_data, aes(x = cf1hhinc, fill = ..x..)) +
+ggsave(filename = "Household_income_violin.png", plot = violin_plot)
+
+# Histogram
+histogram_plot <- ggplot(filtered_data, aes(x = cf1hhinc, fill = ..x..)) +
   geom_histogram(bins = 10, alpha=0.9)  +
-  scale_fill_gradient(low='#483D8B', high='#DB7093') + 
-  labs(title = "Distribution of success by Household income")
-ggsave(filename = "Household income3.png")
+  scale_fill_gradient(low='#483D8B', high='#DB7093') 
+
+ggsave(filename = "Household_income_histogram.png", plot = histogram_plot)
+
 ```
 12. k5d1f: Amount of time on a weekday you play computer games on the computer or TV.
 
@@ -228,21 +236,20 @@ ggsave(filename = "Household income3.png")
 # Filter the data without negative
 filtered_data <- data[data$k5d1f > 0, ]
 # boxplot
-ggplot(filtered_data, aes(x = y_binary, y = k5d1f, fill = as.factor(y_binary))) +
+nn <- ggplot(filtered_data, aes(x = y_binary, y = k5d1f, fill = as.factor(y_binary))) +
   geom_boxplot(alpha = 0.3)  +
-  scale_fill_viridis_d() +
-  labs(title = "Amount of time on a weekday kids play computer games on the computer or TV")
-ggsave(filename = "play computer games.png")
+  scale_fill_viridis_d() 
+ggsave(filename = "play computer games.png",plot=nn)
 # Mosaic Plot
 colors <- c("#5F9EA0", "#ffca3a", "#6495ED","#6a4c93")
-mosaicplot(table(filtered_data$y_binary, filtered_data$k5d1f),
-           main = "Success Score vs. Time on Computer or TV on a Weekday",
+mm <- mosaicplot(table(filtered_data$y_binary, filtered_data$k5d1f),
            ylab = "Success Score",
            color = colors,
+           main = "",
            sub = paste("0-none, 1-half an hour or less,",'\n',
             "2-more than half an hour but less than an hour,",'\n',
             "3-one to two hour, 4 more than 2 hours"))
-ggsave(filename = "play computer games2.png")
+ggsave(filename = "play computer games2.png",plot=mm)
 ```
 13. k5f1f    F1F. Hurt an animal on purpose
 
@@ -255,16 +262,35 @@ ggplot(filtered_data_m, aes(x = k5f1f)) +
 ggsave(filename = "Hurt an animal on purpose.png")
 # Mosaic Plot
 colors <- c("#5F9EA0", "#ffca3a", "#6495ED","#6a4c93")
-mosaicplot(table(filtered_data_m$y_binary, filtered_data_m$k5f1f),
+pp <- mosaicplot(table(filtered_data_m$y_binary, filtered_data_m$k5f1f),
            main = "Success Score vs. Hurt an animal on purpose ",
            ylab = "Success Score",
            color = colors,
            sub = paste("1-Yes,2-No"))
-ggsave(filename = "Hurt an animal on purpose2.png")
+ggsave(filename = "Hurt an animal on purpose2.png",plot = pp)
+```
+```{r}
+# Y 
+library(haven)
+library(ggplot2)
+old_data <- read_dta("D:/BrownUnivercity/DATA2020/Data2020-Final-Project/data/ff_data_x_preprocessed.dta")
+
+ggplot(old_data, aes(x = y_score, fill = ..x..)) +
+  geom_histogram(bins = 7, alpha=0.9)  +
+  scale_fill_gradient(low='#483D8B', high='#DB7093')  
+ggsave(filename = "y_old.png")
 ```
 
 
+```{r}
+# Y 
+data <- read_dta("D:/BrownUnivercity/DATA2020/Data2020-Final-Project/data/ff_data_x_preprocessed_v1.dta")
 
+ggplot(data, aes(x = y_binary, fill = ..x..)) +
+  geom_histogram(bins = 2, alpha=0.9)  +
+  scale_fill_gradient(low='#483D8B', high='#DB7093') 
+ggsave(filename = "y_new.png")
+```
 
 
 
