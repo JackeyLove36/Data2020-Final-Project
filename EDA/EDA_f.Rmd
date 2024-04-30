@@ -19,25 +19,39 @@ print(data)
 filtered_data <- data[data$cf1edu != -3, ]
 
 # Create a bar plot for Father's education
-father_plot <- ggplot(filtered_data, aes(x = cf1edu, fill = ..x..)) +
-  geom_histogram(bins = 10, alpha=0.9)  +
-  scale_fill_gradient(low='#808000', high='#FF7F50') + 
-  labs(x="father education")
+ggplot(filtered_data, aes(x = cf1edu, fill = )) +
+  geom_bar(alpha=0.9) +
+  scale_fill_gradient(low='#483D8B', high='#DB7093') +
+  labs(x="father education",title = "Father's Education")
 
-ggsave(filename = "father.png", plot = father_plot)
-
-# Filter the data to exclude rows where cm1edu equals -3
-filtered_data_m <- data[data$cm1edu != -3, ]
-
-# Create a bar plot for Mother's education
-mother_plot <- ggplot(filtered_data_m, aes(x = cm1edu, fill = ..x..)) +
-  geom_histogram(bins = 10, alpha=0.9)  +
-  scale_fill_gradient(low='#483D8B', high='#DB7093') + 
-  labs( x="mother education")
-
-ggsave(filename = "mother.png", plot = mother_plot)
 
 ```
+
+
+
+```{r}
+# Filter the data to exclude rows where cf1edu equals -3
+filtered_data <- data[data$cf1edu != -3 & data$cm1edu != -3, ]
+
+# Combine cf1edu and cm1edu into a single variable
+combined_edu <- c(filtered_data$cf1edu, filtered_data$cm1edu)
+
+# Create a corresponding group variable
+group <- rep(c("Father's Education", "Mother's Education"), each = nrow(filtered_data))
+
+# Combine data into a new dataframe
+combined_data <- data.frame(combined_edu = factor(combined_edu), group = group)
+
+# Create a bar plot for combined education levels
+bar_plot <- ggplot(combined_data) +
+  geom_bar(aes(x = combined_edu, fill = group),  position = "dodge") +
+  labs(x = "Education Level", title = "Parents' Education") +
+  scale_fill_manual(values = c("Father's Education" = "#483D8B", "Mother's Education" = "#FFD700"))
+bar_plot
+# ggsave(filename = "parents.png", plot = bar_plot)
+```
+
+
 
 3.f2b32: In general, how is your child's health?
 
@@ -119,8 +133,29 @@ mm <- ggplot(category_df, aes(x = "", y = Freq, fill = factor(Var1))) +
   coord_polar("y", start = 0)+
   theme_void() +
   theme(legend.position = "right")
+# ggsave(filename = "father married to child's mother.png",plot=mm)
+mm
+```
+
+
+
+```{r}
+# Filter the data without negative values
+filtered_data <- data[data$cf3marm >= 0, ]
+# Count the frequency of each category in f2d1a
+category_counts <- table(filtered_data$cf3marm)
+# Convert the frequency table to a data frame
+category_df <- as.data.frame(category_counts)
+# Create a pie chart
+mm <- ggplot(category_df, aes(x = "", y = Freq, fill = factor(Var1, labels = c("No", "Yes")))) +
+  geom_bar(stat = "identity", width = 1) +
+  coord_polar("y", start = 0) +
+  theme_void() +
+  theme(legend.position = "right") +
+  labs(title = "Father married to child's mother at year three")
 ggsave(filename = "father married to child's mother.png",plot=mm)
 ```
+
 
 7.cf3kids: Constructed - Number of children under 18 in household
 ```{r}
@@ -173,18 +208,22 @@ ggsave(filename = "Father meets depression criteria.png",plot=nn)
 
 ```{r}
 # Filter the data without negative  
-filtered_data <- data[data$cf4cohm >= 0, ]
+filtered_data <- data[data$cf3md_case_lib >= 0, ]
 # Count the frequency of each category in f2d1a
-category_counts <- table(filtered_data$cf4cohm)
+category_counts <- table(filtered_data$cf3md_case_lib)
 # Convert the frequency table to a data frame
 category_df <- as.data.frame(category_counts)
-# Create a pie chart
-ggplot(category_df, aes(x = "", y = Freq, fill = factor(Var1))) +
+
+bin <- ggplot(category_df, aes(x = "", y = Freq, fill = factor(Var1))) +
   geom_bar(stat = "identity", width = 1) +
-  coord_polar("y", start = 0)  +
+  coord_polar("y", start = 0) +
   theme_void() +
-  theme(legend.position = "right")
-ggsave(filename = "Father living with child's mother at five-year.png")
+  theme(legend.position = "right") +
+  labs(title="Father living with child's mother at five-year",fill = "Success")+
+  scale_fill_manual(values = c("0" = "#483D8B", "1" = "#FFD700"), labels = c("Not Success", "Success")) +
+  scale_x_discrete(labels = c("0" = "Not Success", "1" = "Success"))
+bin
+# ggsave(filename = "Father living with child's mother at five-year.png",plot=bin)
 ```
 10. t4d7: number of kids present with child
 
@@ -193,12 +232,9 @@ filtered_data_m <- data[data$t4d7 >= 0, ]
 # Create a bar plot
 ggplot(filtered_data_m, aes(x = t4d7, fill = ..x..)) +
   geom_histogram(bins = 10, alpha=0.9)  +
-  scale_fill_gradient(low='#483D8B', high='#DB7093')  
+  scale_fill_gradient(low='#483D8B', high='#DB7093')  +
+  labs(x="kids present with child",title="Number of kids present with child")
 ggsave(filename = "kids present with child.png")
-# scatter plot
-# ggplot(filtered_data_m, aes(x = t4d7, y = y_binary)) +
-  # geom_point() +
-  # labs(title = "Success by kids present with child")
 ```
 11. cf1hhinc:  Household income 
 ```{r}
@@ -207,11 +243,11 @@ filtered_data <- data[data$cf1hhinc > 0, ]
 
 # Boxplot
 boxplot_plot <- ggplot(filtered_data, aes(x = y_binary, y = cf1hhinc, fill = as.factor(y_binary))) +
-  geom_boxplot(alpha = 0.3)  +
-  scale_fill_viridis_d() +
-  labs(x="success",y="Household income")
+  geom_boxplot(alpha = 0.6)  +
+  scale_fill_viridis_d() + 
+  labs(x="success",y="Household income", title="Household income")
 
-ggsave(filename = "Household_income_boxplot.png", plot = boxplot_plot)
+# ggsave(filename = "Household_income_boxplot.png", plot = boxplot_plot)
 
 # Violin plot
 violin_plot <- ggplot(filtered_data, aes(y = cf1hhinc, x = y_binary, fill = as.factor(y_binary))) +
@@ -220,32 +256,48 @@ violin_plot <- ggplot(filtered_data, aes(y = cf1hhinc, x = y_binary, fill = as.f
   labs( y = "m2d2", x = "y_binary", fill = "y_binary") +
   theme_minimal()
 
-ggsave(filename = "Household_income_violin.png", plot = violin_plot)
+# ggsave(filename = "Household_income_violin.png", plot = violin_plot)
 
 # Histogram
 histogram_plot <- ggplot(filtered_data, aes(x = cf1hhinc, fill = ..x..)) +
   geom_histogram(bins = 10, alpha=0.9)  +
   scale_fill_gradient(low='#483D8B', high='#DB7093') 
 
-ggsave(filename = "Household_income_histogram.png", plot = histogram_plot)
+# ggsave(filename = "Household_income_histogram.png", plot = histogram_plot)
+
+boxplot_plot
 
 ```
+
+
+```{r}
+# Filter the data without negative
+filtered_data <- data[data$cf1hhinc > 0, ]
+boxplot_plot <- ggplot(filtered_data, aes(x = factor(y_binary), y = cf1hhinc, fill =as.factor(y_binary)))     +
+  geom_boxplot(alpha = 0.5)  +
+  scale_fill_manual(values = c("0" = "#483D8B", "1" = "#FFD700"), labels = c("Not Success", "Success")) +
+  scale_x_discrete(labels = c("0" = "Not Success", "1" = "Success")) +
+  labs(x = "Success", y = "Household income", title = "Household Income",fill="Success")
+boxplot_plot
+ggsave(filename = "Household_income_boxplot.png", plot = boxplot_plot)
+```
+
+
+
+
+
+
 12. k5d1f: Amount of time on a weekday you play computer games on the computer or TV.
 
 ```{r}
 # Filter the data without negative
 filtered_data <- data[data$k5d1f > 0, ]
-# boxplot
-nn <- ggplot(filtered_data, aes(x = y_binary, y = k5d1f, fill = as.factor(y_binary))) +
-  geom_boxplot(alpha = 0.3)  +
-  scale_fill_viridis_d() 
-ggsave(filename = "play computer games.png",plot=nn)
 # Mosaic Plot
 colors <- c("#5F9EA0", "#ffca3a", "#6495ED","#6a4c93")
 mm <- mosaicplot(table(filtered_data$y_binary, filtered_data$k5d1f),
            ylab = "Success Score",
            color = colors,
-           main = "",
+           main = "Success Score vs. Time on Computer or TV on a Weekday",
            sub = paste("0-none, 1-half an hour or less,",'\n',
             "2-more than half an hour but less than an hour,",'\n',
             "3-one to two hour, 4 more than 2 hours"))
@@ -290,6 +342,39 @@ ggplot(data, aes(x = y_binary, fill = ..x..)) +
   geom_histogram(bins = 2, alpha=0.9)  +
   scale_fill_gradient(low='#483D8B', high='#DB7093') 
 ggsave(filename = "y_new.png")
+```
+```{r}
+old_data <- read_dta("D:/BrownUnivercity/DATA2020/Data2020-Final-Project/data/ff_data_x_preprocessed.dta")
+
+ggplot(old_data, aes(x = y_score, fill = factor(y_score))) +
+  geom_bar() +
+  scale_fill_manual(values = c("0" = "#595091", "1" = "#6F5992", "2" = "#836094", "3" = "#986997", "4" = "#A96F99", "5" = "#BD7999", "6" = "#CF819B")) +
+  labs(x = "Success Score")
+ggsave(filename = "y_old.png")
+```
+```{r}
+library(dplyr)
+data <- read_dta("D:/BrownUnivercity/DATA2020/Data2020-Final-Project/data/ff_data_x_preprocessed_v1.dta")
+
+data$y_binary =  factor(data$y_binary, levels = c("1", "0"))
+category_counts <- data %>% 
+    group_by(y_binary) %>% 
+    tally() %>% 
+    arrange(desc(n))
+
+
+# Create a stacked bar chart
+ggplot(category_counts, aes(x = "", y = n, fill = y_binary)) +
+    geom_bar(stat = "identity",width = 0.6) +
+    labs(x = "Success Score",y = "Count", title = "Stacked Bar Chart of Target Variable Distribution",fill = "Sucess Score") +
+    scale_fill_manual(values = c(
+         
+        "1" = "#3E0751","0" = "#F9E855"),labels = c( "Success","Not Success"
+    ))+
+  scale_x_discrete(labels = c( "1" = "Success","0" = "Not Success")) +
+    coord_flip() 
+
+
 ```
 
 
