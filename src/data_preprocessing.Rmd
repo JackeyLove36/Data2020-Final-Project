@@ -177,6 +177,8 @@ construct_y <- function(data) {
   # Composite score
   data$y_score <- rowSums(data[,c('y_good_health', 'y_work_hard', 'y_gpa_good',
                                   'y_social_good', 'y_art', 'y_sport')], na.rm = TRUE)
+  data$y_binary <- ifelse(data$y_score >= 3, 1, 0)
+  
   return(data)
 }
 ```
@@ -205,7 +207,7 @@ data_processed <- construct_y(df_filtered)
 # Select X and Y columns
 X_cols <- c(names(wave1_cols), names(wave2_cols), names(wave3_cols), 
             names(wave4_cols), names(wave5_cols))
-Y_cols <- c('y_missing_rate', 'y_score')
+Y_cols <- c('y_missing_rate', 'y_score', 'y_binary')
 data_processed <- select(data_processed, one_of(c(X_cols, Y_cols)))
 
 # Write the processed data to a .dta file
@@ -229,6 +231,26 @@ x_processed <- x_processed %>%
 x_processed
 ```
 
+## Select Interested Columns after EDA
+
+```{r select-data, message=FALSE}
+X_selected <- c('cf1edu', 'cm1edu', 'f2b32', 'm2d2', 'm2b43a', 'cf3marm', 'cf3kids',
+                'cf3md_case_lib', 'cf4cohm', 't4d7', 'cf1hhinc', 'k5d1f', 'k5f1f')
+Y_selected <- c('y_binary')
+
+# Select columns and export to Stata format
+df_selected <- data_processed %>%
+  select(all_of(c(X_selected, Y_selected)))
+# write_dta(df_selected, '../data/ff_data_preprocessed_v1.dta')
+
+df_selected_x_processed <- x_processed %>%
+  select(all_of(c(X_selected, Y_selected)))
+# write_dta(df_selected_x_processed, '../data/ff_data_x_preprocessed_v1.dta')
+
+df_selected_x_processed
+```
+
+## 
 
 ## Summary
 
