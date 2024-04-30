@@ -233,8 +233,8 @@ x_processed
 
 ## Select Interested Columns after EDA
 
-```{r select-data, message=FALSE}
-X_selected <- c('cf1edu', 'cm1edu', 'f2b32', 'm2d2', 'm2b43a', 'cf3marm', 'cf3kids',
+```{r select-data, tidy=TRUE, tidy.opts=list(width.cutoff=40), message=FALSE}
+X_selected <- c('cf1edu', 'cm1edu', 'f2b32', 'm2d2', 'cf3marm', 'cf3kids',
                 'cf3md_case_lib', 'cf4cohm', 't4d7', 'cf1hhinc', 'k5d1f', 'k5f1f')
 Y_selected <- c('y_binary')
 
@@ -248,6 +248,26 @@ df_selected_x_processed <- x_processed %>%
 # write_dta(df_selected_x_processed, '../data/ff_data_x_preprocessed_v1.dta')
 
 df_selected_x_processed
+```
+
+## Drop Missing Values
+
+In this section, we will drop missing values (e.g., not in wave, refuse to respond, skip) in the selected columns in the X variables. 
+
+```{r drop-missing, tidy=TRUE, tidy.opts=list(width.cutoff=40), message=FALSE}
+
+df_missing_handled <- df_selected_x_processed
+
+# Convert all columns to integer
+df_missing_handled <- df_missing_handled %>%
+  mutate(across(everything(), as.integer))
+
+# Replace negative values in selected columns with NA
+df_missing_handled <- df_missing_handled %>%
+  mutate(across(all_of(X_selected), ~ifelse(. < 0, NA, .)))
+
+# Write the processed data frame to a Stata file
+# write_dta(df_missing_handled, '../data/ff_data_x_preprocessed_v2.dta')
 ```
 
 
