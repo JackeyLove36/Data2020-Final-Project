@@ -250,7 +250,6 @@ df_selected_x_processed <- x_processed %>%
 df_selected_x_processed
 ```
 
-## 
 
 ## Summary
 
