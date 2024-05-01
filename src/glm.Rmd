@@ -80,10 +80,8 @@ train <- data_imputed[!rownames(data_imputed) %in% rownames(test), ]
 ```{r model_fitting}
 options(scipen = 999, digits=3)
 logistic_model <- glm(y_binary ~ ., data = train, family = binomial)
-
 summary(logistic_model)
 anova(logistic_model, test = "Chisq")
-
 ```
 ```{r result}
 coef_summary <- summary(logistic_model)$coefficients
@@ -108,35 +106,6 @@ latex_table <- xtable(final_summary, caption = "Logistic Regression Coefficients
 print(latex_table, include.rownames = TRUE, floating = FALSE, 
       hline.after = c(-1, 0, nrow(final_summary)), digits = c(0, 4, 4, 4))
 ```
-```{r q3-mse, tidy=TRUE, tidy.opts=list(width.cutoff=20)}
-set.seed(42)
-
-# initialization for K-fold CV
-K <- 5
-ctrl <- trainControl(method = "cv",
-                     number = K,
-                     verboseIter = FALSE)
-
-model1_formula <- SBP ~ LEAD + AGE + SEX
-model2_formula <- log(SBP) ~ LEAD + AGE + SEX
-
-# perform K-fold cross-validation
-model1 <- train(model1_formula, data=data, method = "lm", trControl=ctrl)
-model2 <- train(model2_formula, data=data, method = "lm", trControl=ctrl)
-
-# Calculate average MSE for each model
-rmse_model1 <- model1$results$RMSE
-rmse_model2 <- model2$results$RMSE
-mse_model1 <- rmse_model1^2
-mse_model2 <- rmse_model2^2
-
-
-cat("RMSE for Model 1:", rmse_model1, "\n")
-cat("RMSE for Model 2:", rmse_model2, "\n")
-
-cat("MSE for Model 1:", mse_model1, "\n")
-cat("MSE for Model 2:", mse_model2, "\n")
-```
 
 ```{r test, tidy=TRUE, tidy.opts=list(width.cutoff=20)}
 test_predict <- predict(logistic_model, newdata = test, type = "response")
@@ -156,4 +125,23 @@ print(auc(roc_curve))
 conf_matrix <- confusionMatrix(as.factor(test_predict), as.factor(test$y_binary))
 print(conf_matrix$table)
 plot(conf_matrix$table, main = "Confusion Matrix")
+```
+
+
+```{r 5fold-accuracy, tidy=TRUE, tidy.opts=list(width.cutoff=20)}
+library(caret)
+set.seed(42)
+
+# initialization for K-fold CV
+K <- 5
+ctrl <- trainControl(method = "cv",
+                     number = K,
+                     verboseIter = FALSE)
+
+# perform K-fold cross-validation
+model <- train(y_binary ~ ., data = data_imputed, method = "glm", 
+               family = "binomial", trControl=ctrl)
+
+accuracy_results <- model$results
+print(accuracy_results)
 ```
